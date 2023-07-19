@@ -1,18 +1,3 @@
-// class PotentialContact {}
-
-// class ActualizedContact {}
-
-// class UnanchoredContact {}
-
-// class EmptyCN {}
-
-// const contactTypes = {
-//   PCN: PotentialContact,
-//   ACN: ActualizedContact,
-//   UCN: UnanchoredContact,
-//   ECN: EmptyCN,
-// };
-
 const ECN = "ECN";
 const PCN = "PCN";
 const ACN = "ACN";
@@ -43,6 +28,10 @@ class ContactNeighborhood {
     }
   }
 
+  getST(i, j) {
+    return this.neighborhood(i, j)[0];
+  }
+
   setSt(i, j, st) {
     this.neighborhood(i, j)[0] = st;
   }
@@ -58,6 +47,14 @@ class ContactNeighborhood {
 
   getMV(i, j) {
     return this.neighborhood(i, j)[2];
+  }
+
+  getDeltaI(i, j) {
+    return this.neighborhood(i, j)[2][0];
+  }
+
+  getDeltaJ(i, j) {
+    return this.neighborhood(i, j)[2][1];
   }
 
   // MV: Movement vector
