@@ -43,8 +43,8 @@ const TEST3 = [
   "K",
   "K",
 ];
-
-const testPattern = new Pattern(TEST3, 4);
+const pWidth = 4;
+const testPattern = new Pattern(TEST3, pWidth);
 
 const testModel = new ProcessModel(testPattern);
 const yarnGraph = new YarnModel(testModel.cn);
@@ -93,7 +93,11 @@ function makeOpData(pattern, w, h) {
 // Data for simulation
 const nodes = yarnGraph.contactNodes;
 const links = yarnGraph.cnLinkLattice;
-const yarnPath = yarnGraph.yarnPathToLinks();
+const yarnPath = yarnGraph.yarnPath;
+const yarnPathLinks = yarnGraph.yarnPathToLinks();
+
+console.log(nodes);
+console.log(yarnPath);
 
 const ops = makeOpData(TEST3, 4, 9);
 
@@ -115,7 +119,7 @@ const labelsContainer = svg.append("g").attr("class", "labels");
 
 const yarnLinks = yarnContainer
   .selectAll()
-  .data(yarnPath)
+  .data(yarnPathLinks)
   .join("path")
   .attr("stroke-width", 15)
   .attr("stroke-linecap", "round")
@@ -139,19 +143,19 @@ const cnNodes = cnNodeContainer
   .attr("r", 3);
 // .attr("fill", (d) => color(cnTypes[d.cn]));
 
-// const operations = operationContainer
-//   .selectAll()
-//   .data(ops)
-//   .join("polygon")
-//   .attr("fill", (d) => opColors(d.op));
+const operations = operationContainer
+  .selectAll()
+  .data(ops)
+  .join("polygon")
+  .attr("fill", (d) => opColors(d.op));
 
-// const opLabels = labelsContainer
-//   .selectAll()
-//   .data(ops)
-//   .join("text")
-//   .text((d) => d.stitch)
-//   .attr("text-anchor", "middle")
-//   .attr("font-size", "40");
+const opLabels = labelsContainer
+  .selectAll()
+  .data(ops)
+  .join("text")
+  .text((d) => d.stitch)
+  .attr("text-anchor", "middle")
+  .attr("font-size", "40");
 
 cnNodes.append("title").text((d) => d.id);
 
@@ -173,7 +177,95 @@ function stitchY(stitch) {
   );
 }
 
+function getAngle(prev, next) {
+  const x = prev.x - next.x;
+  const y = prev.y - next.y;
+
+  return Math.atan2(y, x);
+}
+
+function cubicYarnPath() {
+  // iterate through the yarn path CN list
+
+  let prevAngle = getAngle(
+    nodes[yarnPath[index - 1][1] * pWidth + prevCN[0]],
+    nodes[currentCN[1] * pWidth + currentCN[0]]
+  );
+
+  for (let index = 1; index < yarnPath.length - 1; index++) {
+    if (index == 1) {
+      prevAngle = getAngle(
+        nodes[prevCN[1] * pWidth + prevCN[0]],
+        nodes[currentCN[1] * pWidth + currentCN[0]]
+      );
+    }
+    const currentCN = yarnPath[index];
+    const prevCN = yarnPath[index - 1];
+    const nextCN = yarnPath[index + 1];
+
+    // find the angle between the previous and next CNs
+    const angle0 = getAngle(
+      nodes[prevCN[1] * pWidth + prevCN[0]],
+      nodes[currentCN[1] * pWidth + currentCN[0]]
+    );
+
+    const angle1 = getAngle(
+      nodes[currentCN[1] * pWidth + currentCN[0]],
+      nodes[nextCN[1] * pWidth + nextCN[0]]
+    );
+
+    // find the magnitude of the handles
+    // update one of the handles in the yarn link on either side of the yarn contact
+    console.log(angle0 + angle1 / 2);
+
+    yarnPathLinks[index - 1].handle1 = [0, 0];
+    yarnPathLinks[index].handle0 = [0, 0];
+  }
+
+  // yarnPath.forEach(([i, j, stitchRow, headOrLeg], index) => {
+  //   const prev = index - 1;
+  //   const next = index + 1;
+  //   if (index == 0 || next == yarnPath.length) return;
+
+  //   let cn = nodes[j * pWidth + i];
+
+  //   console.log(getAngle());
+
+  //   if (cn.index == 0 || cn.index == nodes.length - 1) {
+  //     // first or last
+  //   }
+
+  //   // find the angle of the handles based on the contact current positions
+  //   // find the magnitude of the handles
+  //   // update the yarn link on either side of the yarn contact
+  // });
+}
+
+function yarnCurve(yarnLink) {
+  // console.log(yarnLink);
+
+  // let prev = yarnLinks[index - 1];
+  // let next = yarnLinks[index + 1];
+
+  let source = yarnLink.source;
+  let target = yarnLink.target;
+
+  const angle0 = 4;
+  const angle1 = 4;
+
+  const mag = Math.sqrt(source.x);
+
+  let c0x = source.x + mag * Math.cos(angle0);
+  let c0y = source.y + mag * Math.sin(angle0);
+
+  let c1x = target.x - mag * Math.cos(angle1);
+  let c1y = target.y - mag * Math.sin(angle1);
+
+  return `M ${source.x} ${source.y} C ${c0x} ${c0y} ${c1x} ${c1y} ${target.x} ${target.y}`;
+}
+
 function ticked() {
+  // console.log(yarnLinks);
   // cnLinks
   //   .attr("x1", (d) => d.source.x)
   //   .attr("y1", (d) => d.source.y)
@@ -181,28 +273,31 @@ function ticked() {
   //   .attr("y2", (d) => d.target.y);
   // console.log(yarnLinks);
 
-  yarnLinks.attr(
-    "d",
-    d3
-      .link(d3.curveBundle.beta(0.5))
-      .x((d) => {
-        // console.log(d);
-        return d.x;
-      })
-      .y((d) => d.y)
-  );
+  // yarnLinks.attr(
+  //   "d",
+  //   d3
+  //     .link(d3.curveBundle.beta(0.5))
+  //     .x((d) => {
+  //       // console.log(d);
+  //       return d.x;
+  //     })
+  //     .y((d) => d.y)
+  // );
+  cubicYarnPath();
+
+  yarnLinks.attr("d", yarnCurve);
 
   cnNodes.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
 
   // positions for stitch operation polygons and text
-  // operations.attr("points", (d) =>
-  //   d.cnIndices.reduce(
-  //     (str, vertexID) => `${str} ${nodes[vertexID].x},${nodes[vertexID].y}`,
-  //     ""
-  //   )
-  // );
+  operations.attr("points", (d) =>
+    d.cnIndices.reduce(
+      (str, vertexID) => `${str} ${nodes[vertexID].x},${nodes[vertexID].y}`,
+      ""
+    )
+  );
 
-  // opLabels.attr("x", (d) => stitchX(d)).attr("y", (d) => stitchY(d));
+  opLabels.attr("x", (d) => stitchX(d)).attr("y", (d) => stitchY(d));
 }
 
 function dragstarted(event) {
@@ -225,7 +320,10 @@ function dragended(event) {
 const simulation = d3
   .forceSimulation(nodes)
   .force("charge", d3.forceManyBody().strength(-100))
-  .force("link", d3.forceLink(yarnPath).strength(1).distance(75).iterations(10))
+  .force(
+    "link",
+    d3.forceLink(yarnPathLinks).strength(1).distance(75).iterations(10)
+  )
   .force(
     "center",
     d3.forceCenter(window.innerWidth / 2, window.innerHeight / 2)

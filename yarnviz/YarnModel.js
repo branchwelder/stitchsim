@@ -20,11 +20,11 @@ function followTheYarn(DS) {
       let location;
       if (legNode) {
         // leg nodes do not move
-        location = [i, j, currentStitchRow];
+        location = [i, j, currentStitchRow, "L"];
       } else {
         // head nodes might move, find final location
         const final = finalLocation(i, j, DS);
-        location = [final.i, final.j, currentStitchRow];
+        location = [final.i, final.j, currentStitchRow, "H"];
       }
       yarnPath.push(location);
     }
@@ -62,7 +62,7 @@ function addToList(i, j, legNode, yarnPath, DS) {
       if (i % 2 == 0 && j % 2 != 0) {
         // if i is even and j is odd, we look backward in the yarn path
         // last acn in yarn path
-        [m, n, _] = yarnPath.at(-1);
+        [m, n, _, _] = yarnPath.at(-1);
       } else {
         // When the parities are the same, the check looks forward along the yarn for a CN that might be at a lower j value.
         // look forward for next ACN in yarn path
@@ -194,7 +194,7 @@ export class YarnModel {
   constructor(cns) {
     this.width = cns.width;
     this.height = cns.height;
-    console.log(cns);
+    this.cns = cns;
 
     this.contactNodes = cns.contacts.map((cn, i) => {
       return {
@@ -225,15 +225,37 @@ export class YarnModel {
     this.yarnPath = followTheYarn(cns);
   }
 
+  // There are four kinds of yarn links:
+  // head-to-head
+  // leg-to-leg
+  // head-to-leg
+  // leg-to-head
+
   yarnPathToLinks() {
     let source = 0;
+    let last = this.yarnPath[0][3];
     const links = [];
-    this.yarnPath.forEach(([i, j, stitchRow]) => {
+
+    this.yarnPath.forEach(([i, j, stitchRow, headOrLeg]) => {
       let target = j * this.width + i;
-      links.push({ source: source, target: target, row: stitchRow });
+      links.push({
+        source: source,
+        target: target,
+        row: stitchRow,
+        linkType: last + headOrLeg,
+        handle0: [0, 0],
+        handle1: [0, 0],
+      });
       source = target;
+      last = headOrLeg;
     });
 
     return links;
   }
+
+  // cubicYarnPath() {
+  //   return this.yarnPath.map(([i, j, stitchRow, headOrLeg]) => {
+  //     return [i, j, stitchRow, headOrLeg];
+  //   });
+  // }
 }
