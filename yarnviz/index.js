@@ -3,103 +3,75 @@ import { Pattern } from "./pattern";
 import { YarnModel } from "./YarnModel";
 import * as d3 from "d3";
 
-const TEST = ["K", "K", "K", "K"];
-const TEST2 = ["K", "K", "K", "K", "K", "T", "T", "K"];
-const TEST3 = [
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-  "K",
-];
+const pWidth = 20;
+const pHeight = 20;
 
-const testPattern = new Pattern(TEST3, 4);
+const TEST = ["K", "K", "K", "K"];
+const TEST2 = ["K", "K", "K", "K", "K", "M", "M", "K", "K", "K", "K", "K"];
+const TEST3 = Array(pWidth * pHeight).fill("K");
+
+const testPattern = new Pattern(TEST3, pWidth);
 
 const testModel = new ProcessModel(testPattern);
 const yarnGraph = new YarnModel(testModel.cn);
 
-console.log(yarnGraph.yarnPath);
-
-const cnTypes = {
-  ACN: 0,
-  PCN: 1,
-  UACN: 2,
-  ECN: 3,
+const PARAMS = {
+  yarnWidth: 12,
 };
 
-const opTypes = {
-  T: 0,
-  K: 1,
-  S: 2,
-};
+// const cnTypes = {
+//   ACN: 0,
+//   PCN: 1,
+//   UACN: 2,
+//   ECN: 3,
+// };
 
-function makeOpData(pattern, w, h) {
-  const ops = [];
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
+// const opTypes = {
+//   T: 0,
+//   K: 1,
+//   S: 2,
+// };
 
-      // this is the polygon draw order
-      const cnIJ = [
-        [2 * x, y],
-        [2 * x + 1, y],
-        [2 * x + 1, y + 1],
-        [2 * x, y + 1],
-      ];
+// function makeOpData(pattern, w, h) {
+//   const ops = [];
+//   for (let y = 0; y < h; y++) {
+//     for (let x = 0; x < w; x++) {
+//       const i = y * w + x;
 
-      ops.push({
-        index: i,
-        stitch: pattern[i],
-        op: opTypes[pattern[i]],
-        cnIndices: cnIJ.map(([i, j]) => j * 2 * w + i),
-      });
-    }
-  }
+//       // this is the polygon draw order
+//       const cnIJ = [
+//         [2 * x, y],
+//         [2 * x + 1, y],
+//         [2 * x + 1, y + 1],
+//         [2 * x, y + 1],
+//       ];
 
-  return ops;
-}
+//       ops.push({
+//         index: i,
+//         stitch: pattern[i],
+//         op: opTypes[pattern[i]],
+//         cnIndices: cnIJ.map(([i, j]) => j * 2 * w + i),
+//       });
+//     }
+//   }
+
+//   return ops;
+// }
 
 // Data for simulation
 const nodes = yarnGraph.contactNodes;
-const links = yarnGraph.cnLinkLattice;
-const yarnPath = yarnGraph.yarnPathToLinks();
+const yarnPath = yarnGraph.makeNice();
+const yarnPathLinks = yarnGraph.yarnPathToLinks();
 
-const ops = makeOpData(TEST3, 4, 9);
+console.log(nodes);
+console.log(yarnPath);
+console.log(yarnPathLinks);
+
+// const ops = makeOpData(TEST3, 4, 9);
 
 // D3 Simulation begins here
 const color = d3.scaleOrdinal(d3.schemeCategory10);
-const opColors = d3.scaleOrdinal(d3.schemePastel1);
+// const opColors = d3.scaleOrdinal(d3.schemePastel1);
 
 const svg = d3
   .select("body")
@@ -107,37 +79,46 @@ const svg = d3
   .attr("width", "100%")
   .attr("height", "100%");
 
-const operationContainer = svg.append("g").attr("class", "operations");
-// const cnLinkContainer = svg.append("g").attr("class", "contact-links");
-const yarnContainer = svg.append("g").attr("class", "yarns");
-const cnNodeContainer = svg.append("g").attr("class", "contact-nodes");
+// const operationContainer = svg.append("g").attr("class", "operations");
+
+const yarnsBehind = svg.append("g").attr("class", "yarns-behind");
+const yarnsFront = svg.append("g").attr("class", "yarns");
 const labelsContainer = svg.append("g").attr("class", "labels");
+const cnNodeContainer = svg.append("g").attr("class", "contact-nodes");
 
-const yarnLinks = yarnContainer
-  .selectAll()
-  .data(yarnPath)
-  .join("path")
-  .attr("stroke-width", 15)
+const backYarns = yarnsBehind
+  .attr("filter", "brightness(0.7)")
+  .attr("stroke-width", PARAMS.yarnWidth)
   .attr("stroke-linecap", "round")
-  .attr("fill", "none")
-  .attr("stroke", (d) => color(d.row));
-
-// const cnLinks = cnLinkContainer
-//   .attr("stroke", "#999")
-//   .attr("stroke-opacity", 0.6)
-//   .selectAll()
-//   .data(links)
-//   .join("line")
-//   .attr("stroke-width", 2);
-
-const cnNodes = cnNodeContainer
-  .attr("stroke", "#fff")
-  .attr("stroke-width", 1.5)
   .selectAll()
-  .data(nodes)
-  .join("circle")
-  .attr("r", 3);
-// .attr("fill", (d) => color(cnTypes[d.cn]));
+  .data(yarnPathLinks)
+  .join("path")
+  .filter(function (d) {
+    return d.linkType == "LLFL" || d.linkType == "FHLH";
+  })
+
+  .attr("fill", "none")
+  .attr("stroke", (d) => color(d.row % 4 < 2 ? 0 : 1));
+
+const frontYarns = yarnsFront
+  .attr("class", "shadow")
+  .attr("stroke-width", PARAMS.yarnWidth)
+  .attr("stroke-linecap", "round")
+  .selectAll()
+  .data(yarnPathLinks)
+  .join("path")
+  .filter(function (d) {
+    return !(d.linkType == "LLFL" || d.linkType == "FHLH");
+  })
+  .attr("fill", "none")
+  .attr("stroke", (d) => color(d.row % 4 < 2 ? 0 : 1));
+
+// const cnNodes = cnNodeContainer
+//   .selectAll()
+//   .data(nodes)
+//   .join("circle")
+//   .attr("opacity", 0)
+//   .attr("r", 5);
 
 // const operations = operationContainer
 //   .selectAll()
@@ -153,81 +134,138 @@ const cnNodes = cnNodeContainer
 //   .attr("text-anchor", "middle")
 //   .attr("font-size", "40");
 
-cnNodes.append("title").text((d) => d.id);
+// cnNodes.append("title").text((d) => d.id);
 
-cnNodes.call(
+// cnNodes.call(
+//   d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended)
+// );
+
+backYarns.call(
   d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended)
 );
 
-function stitchX(stitch) {
-  const inds = stitch.cnIndices;
-  return (
-    inds.reduce((sum, vertexID) => sum + nodes[vertexID].x, 0) / inds.length
+frontYarns.call(
+  d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended)
+);
+
+// function stitchX(stitch) {
+//   const inds = stitch.cnIndices;
+//   return (
+//     inds.reduce((sum, vertexID) => sum + nodes[vertexID].x, 0) / inds.length
+//   );
+// }
+
+// function stitchY(stitch) {
+//   const inds = stitch.cnIndices;
+//   return (
+//     inds.reduce((sum, vertexID) => sum + nodes[vertexID].y, 0) / inds.length
+//   );
+// }
+
+function getNormal(prev, next, flip) {
+  if (prev.index === next.index) return [0, 0];
+  const x = prev.x - next.x;
+  const y = prev.y - next.y;
+
+  const mag = Math.sqrt(x ** 2 + y ** 2);
+  if (flip) {
+    return [-y / mag, x / mag];
+  } else {
+    return [y / mag, -x / mag];
+  }
+}
+
+function updateNormals() {
+  yarnPath[0].normal = getNormal(
+    nodes[yarnPath[0].cnIndex],
+    nodes[yarnPath[1].cnIndex],
+    true
+  );
+  for (let index = 1; index < yarnPath.length - 1; index++) {
+    yarnPath[index].normal = getNormal(
+      nodes[yarnPath[index - 1].cnIndex],
+      nodes[yarnPath[index + 1].cnIndex],
+      yarnPath[index].j % 2 != 0
+    );
+  }
+
+  yarnPath.at(-1).normal = getNormal(
+    nodes[yarnPath.at(-2).cnIndex],
+    nodes[yarnPath.at(-1).cnIndex],
+    true
   );
 }
 
-function stitchY(stitch) {
-  const inds = stitch.cnIndices;
-  return (
-    inds.reduce((sum, vertexID) => sum + nodes[vertexID].y, 0) / inds.length
-  );
+const openYarnCurve = d3
+  .line()
+  .x((d) => nodes[d.cnIndex].x + (PARAMS.yarnWidth / 2) * d.normal[0])
+  .y((d) => nodes[d.cnIndex].y + (PARAMS.yarnWidth / 2) * d.normal[1])
+  .curve(d3.curveCatmullRomOpen);
+
+function yarnCurve(yarnLink) {
+  const index = yarnLink.index;
+
+  if (index == 0 || index > yarnPathLinks.length - 3) {
+    // if is the first or last link, just draw a line
+    return `M ${yarnLink.source.x} ${yarnLink.source.y} ${yarnLink.target.x} ${yarnLink.target.y}`;
+  }
+
+  const linkData = [
+    yarnPath[index - 1],
+    yarnPath[index],
+    yarnPath[index + 1],
+    yarnPath[index + 2],
+  ];
+
+  return openYarnCurve(linkData);
 }
 
 function ticked() {
-  // cnLinks
-  //   .attr("x1", (d) => d.source.x)
-  //   .attr("y1", (d) => d.source.y)
-  //   .attr("x2", (d) => d.target.x)
-  //   .attr("y2", (d) => d.target.y);
-  // console.log(yarnLinks);
-
-  yarnLinks.attr(
-    "d",
-    d3
-      .link(d3.curveBundle.beta(0.5))
-      .x((d) => {
-        // console.log(d);
-        return d.x;
-      })
-      .y((d) => d.y)
-  );
-
-  cnNodes.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
-
-  // positions for stitch operation polygons and text
-  // operations.attr("points", (d) =>
-  //   d.cnIndices.reduce(
-  //     (str, vertexID) => `${str} ${nodes[vertexID].x},${nodes[vertexID].y}`,
-  //     ""
-  //   )
-  // );
-
-  // opLabels.attr("x", (d) => stitchX(d)).attr("y", (d) => stitchY(d));
+  updateNormals();
+  frontYarns.attr("d", yarnCurve);
+  backYarns.attr("d", yarnCurve);
 }
 
 function dragstarted(event) {
-  if (!event.active) simulation.alphaTarget(0.3).restart();
-  event.subject.fx = event.subject.x;
-  event.subject.fy = event.subject.y;
+  if (!event.active) simulation.alphaTarget(0.9).restart();
+  event.subject.source.fx = event.subject.source.x;
+  event.subject.source.fy = event.subject.source.y;
+  event.subject.target.fx = event.subject.target.x;
+  event.subject.target.fy = event.subject.target.y;
 }
 
 function dragged(event) {
-  event.subject.fx = event.x;
-  event.subject.fy = event.y;
+  event.subject.source.fx += event.dx;
+  event.subject.source.fy += event.dy;
+  event.subject.target.fx += event.dx;
+  event.subject.target.fy += event.dy;
 }
 
 function dragended(event) {
   if (!event.active) simulation.alphaTarget(0);
-  event.subject.fx = null;
-  event.subject.fy = null;
+  event.subject.source.fx = null;
+  event.subject.source.fy = null;
+  event.subject.target.fx = null;
+  event.subject.target.fy = null;
 }
 
 const simulation = d3
   .forceSimulation(nodes)
-  .force("charge", d3.forceManyBody().strength(-100))
-  .force("link", d3.forceLink(yarnPath).strength(1).distance(75).iterations(10))
+  .force("charge", d3.forceManyBody().strength(-25).distanceMax(150))
+  .force(
+    "link",
+    d3
+      .forceLink(yarnPathLinks)
+      .strength(2)
+      .distance((l) => (l.linkType == "LLFL" || l.linkType == "FHLH" ? 20 : 30))
+      .iterations(2)
+  )
   .force(
     "center",
     d3.forceCenter(window.innerWidth / 2, window.innerHeight / 2)
   )
   .on("tick", ticked);
+
+setTimeout(() => {
+  simulation.force("center", null);
+}, 1000);

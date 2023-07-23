@@ -16,15 +16,19 @@ function followTheYarn(DS) {
   const yarnPath = [];
 
   while (j < DS.height) {
+    const movingRight = currentStitchRow % 2 == 0;
+    const evenI = i % 2 == 0;
+    const side = movingRight === evenI ? "F" : "L";
+
     if (addToList(i, j, legNode, yarnPath, DS)) {
       let location;
       if (legNode) {
         // leg nodes do not move
-        location = [i, j, currentStitchRow];
+        location = [i, j, currentStitchRow, side + "L"];
       } else {
         // head nodes might move, find final location
         const final = finalLocation(i, j, DS);
-        location = [final.i, final.j, currentStitchRow];
+        location = [final.i, final.j, currentStitchRow, side + "H"];
       }
       yarnPath.push(location);
     }
@@ -62,7 +66,7 @@ function addToList(i, j, legNode, yarnPath, DS) {
       if (i % 2 == 0 && j % 2 != 0) {
         // if i is even and j is odd, we look backward in the yarn path
         // last acn in yarn path
-        [m, n, _] = yarnPath.at(-1);
+        [m, n, _, _] = yarnPath.at(-1);
       } else {
         // When the parities are the same, the check looks forward along the yarn for a CN that might be at a lower j value.
         // look forward for next ACN in yarn path
@@ -194,7 +198,7 @@ export class YarnModel {
   constructor(cns) {
     this.width = cns.width;
     this.height = cns.height;
-    console.log(cns);
+    this.cns = cns;
 
     this.contactNodes = cns.contacts.map((cn, i) => {
       return {
@@ -225,15 +229,52 @@ export class YarnModel {
     this.yarnPath = followTheYarn(cns);
   }
 
+  // There are four kinds of yarn CNS:
+  // first head
+  // last head
+  // first leg
+  //  last leg
+  // they're NOT left and right - they depend on the direction the yarn is going
+
   yarnPathToLinks() {
     let source = 0;
+    let last = this.yarnPath[0][3];
     const links = [];
-    this.yarnPath.forEach(([i, j, stitchRow]) => {
+
+    this.yarnPath.forEach(([i, j, stitchRow, headOrLeg], index) => {
+      if (index == 0) return;
       let target = j * this.width + i;
-      links.push({ source: source, target: target, row: stitchRow });
+      links.push({
+        source: source,
+        target: target,
+        row: stitchRow,
+        linkType: last + headOrLeg,
+      });
       source = target;
+      last = headOrLeg;
     });
 
     return links;
   }
+
+  makeNice() {
+    return this.yarnPath.map(([i, j, stitchRow, headOrLeg]) => {
+      // [flat CN index, stitchrow, headOrLeg, angle]
+      return {
+        cnIndex: j * this.width + i,
+        i: i,
+        j: j,
+        row: stitchRow,
+        cnType: headOrLeg,
+        angle: null,
+        normal: [0, 0],
+      };
+    });
+  }
+
+  // cubicYarnPath() {
+  //   return this.yarnPath.map(([i, j, stitchRow, headOrLeg]) => {
+  //     return [i, j, stitchRow, headOrLeg];
+  //   });
+  // }
 }
