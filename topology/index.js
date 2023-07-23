@@ -1,10 +1,10 @@
-import { ProcessModel } from "../topology/ProcessModel";
+import { ProcessModel } from "./ProcessModel";
 import { Pattern } from "../pattern/pattern";
-import { YarnModel } from "../topology/YarnModel";
+import { YarnModel } from "./YarnModel";
 import * as d3 from "d3";
 
-const pWidth = 20;
-const pHeight = 20;
+const pWidth = 8;
+const pHeight = 8;
 
 const TEST = ["K", "K", "K", "K"];
 const TEST2 = ["K", "K", "K", "K", "K", "M", "M", "K", "K", "K", "K", "K"];
@@ -16,7 +16,7 @@ const testModel = new ProcessModel(testPattern);
 const yarnGraph = new YarnModel(testModel.cn);
 
 const PARAMS = {
-  yarnWidth: 12,
+  yarnWidth: 10,
 };
 
 // const cnTypes = {
