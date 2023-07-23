@@ -16,15 +16,19 @@ function followTheYarn(DS) {
   const yarnPath = [];
 
   while (j < DS.height) {
+    const movingRight = currentStitchRow % 2 == 0;
+    const evenI = i % 2 == 0;
+    const side = movingRight === evenI ? "F" : "L";
+
     if (addToList(i, j, legNode, yarnPath, DS)) {
       let location;
       if (legNode) {
         // leg nodes do not move
-        location = [i, j, currentStitchRow, "L"];
+        location = [i, j, currentStitchRow, side + "L"];
       } else {
         // head nodes might move, find final location
         const final = finalLocation(i, j, DS);
-        location = [final.i, final.j, currentStitchRow, "H"];
+        location = [final.i, final.j, currentStitchRow, side + "H"];
       }
       yarnPath.push(location);
     }
@@ -225,32 +229,47 @@ export class YarnModel {
     this.yarnPath = followTheYarn(cns);
   }
 
-  // There are four kinds of yarn links:
-  // head-to-head
-  // leg-to-leg
-  // head-to-leg
-  // leg-to-head
+  // There are four kinds of yarn CNS:
+  // first head
+  // last head
+  // first leg
+  //  last leg
+  // they're NOT left and right - they depend on the direction the yarn is going
 
   yarnPathToLinks() {
     let source = 0;
     let last = this.yarnPath[0][3];
     const links = [];
 
-    this.yarnPath.forEach(([i, j, stitchRow, headOrLeg]) => {
+    this.yarnPath.forEach(([i, j, stitchRow, headOrLeg], index) => {
+      if (index == 0) return;
       let target = j * this.width + i;
       links.push({
         source: source,
         target: target,
         row: stitchRow,
         linkType: last + headOrLeg,
-        handle0: [0, 0],
-        handle1: [0, 0],
       });
       source = target;
       last = headOrLeg;
     });
 
     return links;
+  }
+
+  makeNice() {
+    return this.yarnPath.map(([i, j, stitchRow, headOrLeg]) => {
+      // [flat CN index, stitchrow, headOrLeg, angle]
+      return {
+        cnIndex: j * this.width + i,
+        i: i,
+        j: j,
+        row: stitchRow,
+        cnType: headOrLeg,
+        angle: null,
+        normal: [0, 0],
+      };
+    });
   }
 
   // cubicYarnPath() {
