@@ -28,8 +28,10 @@ function followTheYarn(DS) {
       } else {
         // head nodes might move, find final location
         const final = finalLocation(i, j, DS);
+
         location = [final.i, final.j, currentStitchRow, side + "H"];
       }
+
       yarnPath.push(location);
     }
 
@@ -48,6 +50,7 @@ function followTheYarn(DS) {
 
 function addToList(i, j, legNode, yarnPath, DS) {
   // determines whether to add a contact node to the yarn path
+
   if (legNode) {
     // if it is a leg node
     // let numberOfACNS = acnsAt(i, j, DS).length;
@@ -59,22 +62,58 @@ function addToList(i, j, legNode, yarnPath, DS) {
   } else {
     // head node
     let AV = DS.getAV(i, j);
+
     if (AV == ECN) {
       return false;
     } else if (AV == UACN) {
-      let m, n;
+      let m, n, row, part;
       if (i % 2 == 0 && j % 2 != 0) {
         // if i is even and j is odd, we look backward in the yarn path
         // last acn in yarn path
-        [m, n, _, _] = yarnPath.at(-1);
+
+        [m, n, row, part] = yarnPath.at(-1);
       } else {
         // When the parities are the same, the check looks forward along the yarn for a CN that might be at a lower j value.
         // look forward for next ACN in yarn path
-        [m, n, _, _] = nextCN(i, j, legNode, j - 1, DS);
+        // THIS IS THE ISSUEEEE
+        let found = false;
+        let iCheck = i;
+        let jCheck = j;
+        let legNodeCheck = legNode;
+        let stitchRowCheck = j - 1;
+
+        while (!found) {
+          // get the next cn
+          const check = nextCN(
+            iCheck,
+            jCheck,
+            legNodeCheck,
+            stitchRowCheck,
+            DS
+          );
+          // console.log(check);
+          if (DS.getAV(check.i, check.j) == ACN) {
+            // console.log("FOUND", check.i, check.j);
+            found = true;
+          }
+          iCheck = check.i;
+          jCheck = check.j;
+          legNodeCheck = check.legNode;
+          stitchRowCheck = check.currentStitchRow;
+
+          // if (i == 4 && j == 2) console.log(next);
+        }
+        m = iCheck;
+        n = jCheck;
       }
       // Determine final location
-      let { finalI, finalJ } = finalLocation(i, j, DS);
-      if (n < finalJ) {
+      const final = finalLocation(i, j, DS);
+
+      // if (i == 4 && j == 2) console.log(final, m, n);
+
+      // console.log(final, m, n);
+
+      if (n < final.j) {
         // if this CN is anchored
         DS.setAV(i, j, ACN); // update CN state
         return true;
@@ -90,7 +129,7 @@ function addToList(i, j, legNode, yarnPath, DS) {
 
 function finalLocation(i, j, DS) {
   // determines where ACNs in the CN[i,j] grid end up in the yarn[i,j] grid
-  const [dj, di] = DS.getMV(i, j);
+  const [di, dj] = DS.getMV(i, j);
 
   if (j == DS.height - 1) {
     return { i, j };
@@ -104,10 +143,15 @@ function finalLocation(i, j, DS) {
 }
 
 function finalLocationRecursive(i, j, DS) {
+  // console.log(DS.getST(i, j));
   if (DS.getST(i, j) == KNIT || DS.getST(i, j) == PURL) {
     // CN is actualized with a knit or purl stitch
     return { i, j };
+  } else if (j == DS.height - 1) {
+    // if we hit the top, return? Is this right?
+    return { i, j };
   } else {
+    // console.log(j + DS.getDeltaJ(i, j));
     // Otherwise we need to accumulate vertical movement
     return finalLocationRecursive(i, j + DS.getDeltaJ(i, j), DS);
   }
@@ -209,23 +253,6 @@ export class YarnModel {
       };
     });
 
-    this.cnLinkLattice = [];
-
-    for (let y = 0; y < this.height; ++y) {
-      for (let x = 0; x < this.width; ++x) {
-        if (y > 0)
-          this.cnLinkLattice.push({
-            source: (y - 1) * this.width + x,
-            target: y * this.width + x,
-          });
-        if (x > 0)
-          this.cnLinkLattice.push({
-            source: y * this.width + (x - 1),
-            target: y * this.width + x,
-          });
-      }
-    }
-
     this.yarnPath = followTheYarn(cns);
   }
 
@@ -271,10 +298,4 @@ export class YarnModel {
       };
     });
   }
-
-  // cubicYarnPath() {
-  //   return this.yarnPath.map(([i, j, stitchRow, headOrLeg]) => {
-  //     return [i, j, stitchRow, headOrLeg];
-  //   });
-  // }
 }

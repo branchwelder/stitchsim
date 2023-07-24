@@ -10,68 +10,112 @@ const TEST = ["K", "K", "K", "K"];
 const TEST2 = ["K", "K", "K", "K", "K", "M", "M", "K", "K", "K", "K", "K"];
 const TEST3 = Array(pWidth * pHeight).fill("K");
 
-const testPattern = new Pattern(TEST3, pWidth);
+const pat = [
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["T", "K", "K", "T", "T", "K", "K", "T", "T", "K", "K", "T"],
+  ["T", "K", "K", "T", "T", "K", "K", "T", "T", "K", "K", "T"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "T", "T", "K", "K", "T", "T", "K", "K", "T", "T", "K"],
+  ["K", "T", "T", "K", "K", "T", "T", "K", "K", "T", "T", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["T", "K", "K", "T", "T", "K", "K", "T", "T", "K", "K", "T"],
+  ["T", "K", "K", "T", "T", "K", "K", "T", "T", "K", "K", "T"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "T", "T", "K", "K", "T", "T", "K", "K", "T", "T", "K"],
+  ["K", "T", "T", "K", "K", "T", "T", "K", "K", "T", "T", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["T", "K", "K", "T", "T", "K", "K", "T", "T", "K", "K", "T"],
+  ["T", "K", "K", "T", "T", "K", "K", "T", "T", "K", "K", "T"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "T", "T", "K", "K", "T", "T", "K", "K", "T", "T", "K"],
+  ["K", "T", "T", "K", "K", "T", "T", "K", "K", "T", "T", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["T", "K", "K", "T", "T", "K", "K", "T", "T", "K", "K", "T"],
+  ["T", "K", "K", "T", "T", "K", "K", "T", "T", "K", "K", "T"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "T", "T", "K", "K", "T", "T", "K", "K", "T", "T", "K"],
+  ["K", "T", "T", "K", "K", "T", "T", "K", "K", "T", "T", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+];
+
+const slipPat = [
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "M", "M", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K", "K"],
+];
+
+const triangle = [
+  ["K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "T", "K", "K", "K"],
+  ["K", "K", "T", "T", "T", "K", "K"],
+  ["K", "T", "T", "T", "T", "T", "K"],
+  ["K", "K", "K", "K", "K", "K", "K"],
+  ["K", "K", "K", "K", "K", "K", "K"],
+];
+
+const testPat = [];
+pat.forEach((pat) => {
+  testPat.push(pat);
+  testPat.push(pat);
+});
+
+const testPattern = new Pattern(testPat.flat(), 24);
 
 const testModel = new ProcessModel(testPattern);
 const yarnGraph = new YarnModel(testModel.cn);
 
 const PARAMS = {
-  yarnWidth: 12,
+  yarnWidth: 8,
+  hDist: 15,
+  vDist: 20,
 };
 
-// const cnTypes = {
-//   ACN: 0,
-//   PCN: 1,
-//   UACN: 2,
-//   ECN: 3,
-// };
+function layoutNodes(yarnGraph) {
+  // calculates the x,y pixel values for the i,j nodes based on current window size
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  // const dist =
+  //   0.8 * Math.min(w / (yarnGraph.width - 1), h / (yarnGraph.height - 1));
+  const dist = PARAMS.vDist;
 
-// const opTypes = {
-//   T: 0,
-//   K: 1,
-//   S: 2,
-// };
+  yarnGraph.contactNodes.forEach((node, index) => {
+    const i = index % yarnGraph.width;
+    const j = (index - i) / yarnGraph.width;
+    node.i = i;
+    node.j = j;
 
-// function makeOpData(pattern, w, h) {
-//   const ops = [];
-//   for (let y = 0; y < h; y++) {
-//     for (let x = 0; x < w; x++) {
-//       const i = y * w + x;
+    node.x = w / 2 - (dist * (yarnGraph.width - 1)) / 2 + i * dist;
+    node.y = h / 2 + (dist * (yarnGraph.height - 1)) / 2 - j * dist;
+  });
 
-//       // this is the polygon draw order
-//       const cnIJ = [
-//         [2 * x, y],
-//         [2 * x + 1, y],
-//         [2 * x + 1, y + 1],
-//         [2 * x, y + 1],
-//       ];
-
-//       ops.push({
-//         index: i,
-//         stitch: pattern[i],
-//         op: opTypes[pattern[i]],
-//         cnIndices: cnIJ.map(([i, j]) => j * 2 * w + i),
-//       });
-//     }
-//   }
-
-//   return ops;
-// }
+  return yarnGraph.contactNodes;
+}
 
 // Data for simulation
-const nodes = yarnGraph.contactNodes;
+const nodes = layoutNodes(yarnGraph);
 const yarnPath = yarnGraph.makeNice();
 const yarnPathLinks = yarnGraph.yarnPathToLinks();
 
-console.log(nodes);
-console.log(yarnPath);
-console.log(yarnPathLinks);
-
-// const ops = makeOpData(TEST3, 4, 9);
+// console.log(nodes);
+// console.log(yarnPath);
+// console.log(yarnPathLinks);
 
 // D3 Simulation begins here
 const color = d3.scaleOrdinal(d3.schemeCategory10);
-// const opColors = d3.scaleOrdinal(d3.schemePastel1);
 
 const svg = d3
   .select("body")
@@ -79,12 +123,8 @@ const svg = d3
   .attr("width", "100%")
   .attr("height", "100%");
 
-// const operationContainer = svg.append("g").attr("class", "operations");
-
 const yarnsBehind = svg.append("g").attr("class", "yarns-behind");
 const yarnsFront = svg.append("g").attr("class", "yarns");
-const labelsContainer = svg.append("g").attr("class", "labels");
-const cnNodeContainer = svg.append("g").attr("class", "contact-nodes");
 
 const backYarns = yarnsBehind
   .attr("filter", "brightness(0.7)")
@@ -94,51 +134,24 @@ const backYarns = yarnsBehind
   .data(yarnPathLinks)
   .join("path")
   .filter(function (d) {
-    return d.linkType == "LLFL" || d.linkType == "FHLH";
+    return !(d.linkType == "FLFH" || d.linkType == "LHLL");
   })
 
   .attr("fill", "none")
   .attr("stroke", (d) => color(d.row % 4 < 2 ? 0 : 1));
 
 const frontYarns = yarnsFront
-  .attr("class", "shadow")
+  // .attr("class", "shadow")
   .attr("stroke-width", PARAMS.yarnWidth)
   .attr("stroke-linecap", "round")
   .selectAll()
   .data(yarnPathLinks)
   .join("path")
   .filter(function (d) {
-    return !(d.linkType == "LLFL" || d.linkType == "FHLH");
+    return d.linkType == "FLFH" || d.linkType == "LHLL";
   })
   .attr("fill", "none")
   .attr("stroke", (d) => color(d.row % 4 < 2 ? 0 : 1));
-
-// const cnNodes = cnNodeContainer
-//   .selectAll()
-//   .data(nodes)
-//   .join("circle")
-//   .attr("opacity", 0)
-//   .attr("r", 5);
-
-// const operations = operationContainer
-//   .selectAll()
-//   .data(ops)
-//   .join("polygon")
-//   .attr("fill", (d) => opColors(d.op));
-
-// const opLabels = labelsContainer
-//   .selectAll()
-//   .data(ops)
-//   .join("text")
-//   .text((d) => d.stitch)
-//   .attr("text-anchor", "middle")
-//   .attr("font-size", "40");
-
-// cnNodes.append("title").text((d) => d.id);
-
-// cnNodes.call(
-//   d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended)
-// );
 
 backYarns.call(
   d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended)
@@ -148,21 +161,7 @@ frontYarns.call(
   d3.drag().on("start", dragstarted).on("drag", dragged).on("end", dragended)
 );
 
-// function stitchX(stitch) {
-//   const inds = stitch.cnIndices;
-//   return (
-//     inds.reduce((sum, vertexID) => sum + nodes[vertexID].x, 0) / inds.length
-//   );
-// }
-
-// function stitchY(stitch) {
-//   const inds = stitch.cnIndices;
-//   return (
-//     inds.reduce((sum, vertexID) => sum + nodes[vertexID].y, 0) / inds.length
-//   );
-// }
-
-function getNormal(prev, next, flip) {
+function unitNormal(prev, next, flip) {
   if (prev.index === next.index) return [0, 0];
   const x = prev.x - next.x;
   const y = prev.y - next.y;
@@ -176,20 +175,20 @@ function getNormal(prev, next, flip) {
 }
 
 function updateNormals() {
-  yarnPath[0].normal = getNormal(
+  yarnPath[0].normal = unitNormal(
     nodes[yarnPath[0].cnIndex],
     nodes[yarnPath[1].cnIndex],
     true
   );
   for (let index = 1; index < yarnPath.length - 1; index++) {
-    yarnPath[index].normal = getNormal(
+    yarnPath[index].normal = unitNormal(
       nodes[yarnPath[index - 1].cnIndex],
       nodes[yarnPath[index + 1].cnIndex],
       yarnPath[index].j % 2 != 0
     );
   }
 
-  yarnPath.at(-1).normal = getNormal(
+  yarnPath.at(-1).normal = unitNormal(
     nodes[yarnPath.at(-2).cnIndex],
     nodes[yarnPath.at(-1).cnIndex],
     true
@@ -251,21 +250,18 @@ function dragended(event) {
 
 const simulation = d3
   .forceSimulation(nodes)
-  .force("charge", d3.forceManyBody().strength(-25).distanceMax(150))
+  .force("charge", d3.forceManyBody().strength(-40).distanceMax(40))
   .force(
     "link",
     d3
       .forceLink(yarnPathLinks)
       .strength(2)
-      .distance((l) => (l.linkType == "LLFL" || l.linkType == "FHLH" ? 20 : 30))
+      .distance((l) =>
+        l.linkType == "LLFL" || l.linkType == "FHLH"
+          ? PARAMS.hDist
+          : PARAMS.vDist
+      )
       .iterations(2)
   )
-  .force(
-    "center",
-    d3.forceCenter(window.innerWidth / 2, window.innerHeight / 2)
-  )
-  .on("tick", ticked);
 
-setTimeout(() => {
-  simulation.force("center", null);
-}, 1000);
+  .on("tick", ticked);
